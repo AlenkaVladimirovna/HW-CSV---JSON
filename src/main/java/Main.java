@@ -29,19 +29,20 @@ public class Main {
         String fileName = "data.csv";
         List<Employee> list = parseCSV(columnMapping, fileName);
         String json = listToJson(list);
-       // String json = gson.toJson(list, listType);
+        // String json = gson.toJson(list, listType);
 
     }
 
     private static String listToJson(List<Employee> list) {
-        Type listType = new TypeToken<List<T>>() {}.getType();
+        Type listType = new TypeToken<List<T>>() {
+        }.getType();
         GsonBuilder builder = new GsonBuilder();
         Gson gson = builder.create();
         String json = gson.toJson(list, listType);
         return json;
     }
 
-    private static void parseCSV(String[] columnMapping, String fileName) {
+    private static List<Employee>  parseCSV(String[] columnMapping, String fileName) {
         try (CSVReader csvReader = new CSVReader(new FileReader("fileName"))) {
             ColumnPositionMappingStrategy<Employee> strategy =
                     new ColumnPositionMappingStrategy<>();
@@ -55,6 +56,9 @@ public class Main {
         } catch (IOException e) {
             e.printStackTrace();
         }
+
+
+        return List.of();
     }
 
 
