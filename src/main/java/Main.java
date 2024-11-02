@@ -6,7 +6,16 @@ import com.opencsv.CSVWriter;
 import com.opencsv.bean.ColumnPositionMappingStrategy;
 import com.opencsv.bean.CsvToBean;
 import com.opencsv.bean.CsvToBeanBuilder;
+import org.w3c.dom.*;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -15,7 +24,7 @@ import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
-
+        // Создание файла CSV
         String[] employee = "1,John,Smith,USA,25".split(",");
         try (CSVWriter writer = new CSVWriter(new FileWriter("data.csv", true))) {
             writer.writeNext(employee);
@@ -24,16 +33,73 @@ public class Main {
         } catch (IOException e) {
             e.printStackTrace();
         }
-
         String[] columnMapping = {"id", "firstName", "lastName", "country", "age"};
         String fileName = "data.csv";
         List<Employee> list = parseCSV(columnMapping, fileName);
         String json = listToJson(list);
-        // String json = gson.toJson(list, listType);
+
+        // Создание файла XML
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        Document document = builder.newDocument();
+
+        Element staff = document.createElement( "staff");
+        document.appendChild(staff);
+        Element employee = document.createElement( "employee");
+        staff.appendChild(employee);
+        Element id = document.createElement( "id");
+        id.appendChild(document.createTextNode( "1"));
+        employee.appendChild(id);
+        Element firstName = document.createElement( "firstName");
+        id.appendChild(document.createTextNode( "John"));
+        employee.appendChild(firstName);
+        Element lastName = document.createElement( "lastName");
+        id.appendChild(document.createTextNode( "Smith"));
+        employee.appendChild(lastName);
+        Element country = document.createElement( "country");
+        id.appendChild(document.createTextNode( "USA"));
+        employee.appendChild(country);
+        Element age = document.createElement( "age");
+        id.appendChild(document.createTextNode( "25"));
+        employee.appendChild(age);
+
+        DOMSource domSource = new DOMSource(document);
+        StreamResult streamResult = new StreamResult( new File("data.xml"));
+        TransformerFactory transformerFactory = TransformerFactory. newInstance();
+        Transformer transformer = transformerFactory.newTransformer();
+        transformer.transform(domSource, streamResult);
+
+        List<Employee> listXML = parseXML("data.xml");
+        String jsonXML = listToJson(listXML);
 
     }
 
-    private static String listToJson(List<Employee> list) {
+    private static List<Employee> parseXML(String s) {
+        DocumentBuilderFactory factory = DocumentBuilderFactory. newInstance();
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        Document doc = builder.parse( new File("data.xml"));
+        Node staff = doc.getDocumentElement();
+       // read(staff);
+        private static void read(Node node) {
+            NodeList nodeList = staff.getChildNodes();
+            for (int i = 0; i < nodeList.getLength(); i++) {
+                Node node_ = nodeList.item(i);
+                if (Node.ELEMENT_NODE == node_.getNodeType()) {
+                    //System. out.println("Текущий узел: " + node_.getNodeName());
+                    Element element = (Element) node_;
+                    NamedNodeMap map = element.getAttributes();
+                    for (int a = 0; a < map.getLength(); a++) {
+                        String attrName = map.item(a).getNodeName();
+                        String attrValue = map.item(a).getNodeValue();
+                       // System. out.println("Атрибут: " + attrName + "; значение: " + attrValue);
+                    }
+                    read(node_);
+                }
+            }
+        }
+
+
+        private static String listToJson(List<Employee> list) {
         Type listType = new TypeToken<List<T>>() {
         }.getType();
         GsonBuilder builder = new GsonBuilder();
